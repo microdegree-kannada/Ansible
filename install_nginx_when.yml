@@ -1,0 +1,19 @@
+---
+- name: install nginx package
+  hosts: dbserver
+  become: yes
+  tasks:
+    - name: install nginx
+      apt:
+        name: nginx
+        state: present
+      when: ansible_os_family == "Debian"
+    - name: install nginx on redhat
+      yum:
+        name: nginx
+        state: present
+      when: ansible_os_family == "RedHat"
+
+
+
+

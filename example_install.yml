@@ -1,0 +1,81 @@
+---
+- name: istall tomcat 
+  hosts: dbserver
+  become: yes
+  vars:
+    tomcat_version: apache-tomcat-9.0.60.tar.gz
+  tasks: 
+  - name: update the packages
+    become: yes
+    apt:
+      update_cache: yes
+  - name: install java-11
+    apt:
+      name: "{{ packages }}"
+      state: present
+    vars:
+      packages:
+        - openjdk-11-jdk
+
+  - name: creating tomcat group 
+    group:
+      name: tomcat
+      state: present
+  - name: create tomcat user
+    user: 
+      name: tomcat
+      shell: /bin/false
+      group: tomcat
+  - name: downloading tar file
+    get_url:
+      url: https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.60/bin/apache-tomcat-9.0.60.tar.gz
+      dest: /tmp
+  - name: creating a directory 
+    file:
+      path: /opt/tomcat
+      state: directory
+  - name: unzipping the tar file
+    unarchive: 
+       src: "/tmp/{{ tomcat_version }}"
+       dest: /opt/tomcat
+       extra_opts: [--strip-components=1]
+       remote_src: yes
+  - name: giving permissions for tomcat
+    file: 
+      path: /opt/tomcat
+      owner: tomcat
+      group: tomcat
+      state: directory
+      recurse: yes
+  
+  - name: copying unit file to nodes
+    copy:
+      src: /etc/ansible/tomcat.service
+      dest: /etc/systemd/system
+    notify:
+      - restart tomcat 9
+  
+  - name: restarting the systemd file
+    systemd:
+      name: tomcat.service
+      state: restarted
+      daemon_reload: true 
+  
+  - name: copying war file to webapp location
+    copy: 
+      src:  /home/ubuntu/demo/hello/target/hello.war
+      dest: /opt/tomcat/webapps
+      owner: tomcat
+      group: tomcat
+    notify:
+      - restart tomcat 9 
+  - name: crosscheck tomcat is restarted
+    shell: service tomcat status 
+    register: tomcat_output
+
+  - debug: var=tomcat_output.stdout_lines 
+
+  handlers:    
+    - name: restart tomcat 9
+      service: name=tomcat state=restarted
+

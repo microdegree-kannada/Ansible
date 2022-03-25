@@ -1,0 +1,18 @@
+---
+- name: install nginx package
+  hosts: dbserver
+  become: yes
+  tasks:
+    - name: updating the packages 
+      apt:
+        name: nginx
+        update_cache: yes
+
+    - name: install nginx
+      apt:
+        name: nginx
+        state: present
+
+
+
+

@@ -1,0 +1,11 @@
+---
+- name: practcing varibale
+  hosts: dbserver
+  vars:
+    package: nginx
+    path: /tmp
+  tasks:
+    - name: printing package name
+      shell: echo "this is coming from the variable_section {{ path }}"
+      register: output
+    - debug: var=output.stdout_lines
